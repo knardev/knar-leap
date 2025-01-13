@@ -1,0 +1,103 @@
+<div
+  style="
+    padding: 35px 40px;
+    width: 100%;
+    border: 1px solid rgba(124, 124, 124, 0.5);
+    background: #f9f9f9;
+  "
+>
+  <div style="display: flex; gap: 60px; width: 720px">
+    <div style="display: flex; flex-direction: column; gap: 13px">
+      <p
+        style="
+          color: #121212;
+          font-size: 16px;
+          font-weight: 600;
+          line-height: 145%; /* 23.2px */
+        "
+      >
+        카테고리로 찾기
+      </p>
+      <div style="position: relative; width: 180px; height: 60px">
+        <select
+          style="
+            width: 100%;
+            height: 100%;
+            padding: 0 10px;
+            border: 1px solid #d1d1d1;
+            border-radius: 5px;
+            font-size: 14px;
+            color: #121212;
+            appearance: none; /* 기본 화살표 제거 */
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background: white;
+            z-index: 1;
+            position: relative;
+          "
+        >
+          <option value="1">전체</option>
+          <option value="2">카테고리1</option>
+          <option value="3">카테고리2</option>
+          <option value="4">카테고리3</option>
+        </select>
+        <!-- 외부 링크 이미지 추가 -->
+        <img
+          src="https://cdn.imweb.me/upload/S20241220c9927bad89189/a3b2ea0bd314b.png"
+          alt="화살표"
+          style="
+            width: 14px;
+            height: 8px;
+            position: absolute;
+            top: 50%;
+            right: 10px;
+            transform: translateY(-50%);
+            pointer-events: none;
+          "
+        />
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 13px">
+      <p
+        style="
+          color: #121212;
+          font-size: 16px;
+          font-weight: 600;
+          line-height: 145%; /* 23.2px */
+        "
+      >
+        직접 입력
+      </p>
+      <div style="display: flex; gap: 20px">
+        <input
+          type="text"
+          placeholder="담당자명, 제품명 입력"
+          style="
+            width: 350px;
+            height: 60px;
+            padding: 0 10px;
+            border: 1px solid #d1d1d1;
+            border-radius: 5px;
+            font-size: 14px;
+            color: #121212;
+          "
+        />
+        <button
+          style="
+            width: 110px;
+            height: 60px;
+            opacity: 0.9;
+            background: #12298c;
+            border: 1px solid #12298c;
+            border-radius: 5px;
+            font-size: 14px;
+            color: white;
+          "
+        >
+          검색
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
