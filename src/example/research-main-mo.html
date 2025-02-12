@@ -1,0 +1,178 @@
+<style>
+  /* Grid container: 2 columns, 2 rows (4 cards total) */
+  #research-container-mo {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 10px;
+    width: 100%;
+  }
+
+  #research-container-mo .research-card {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 30px 27px 48px 27px;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 229px;
+  }
+
+  /* Card Header: 논문지 & 논문명 */
+  #research-container-mo .card-header .journal {
+    color: #fff;
+    font-family: Pretendard;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: normal;
+    letter-spacing: -0.14px;
+  }
+  #research-container-mo .card-header .paper-title {
+    margin-top: 10px;
+    color: #fff;
+    font-family: Pretendard;
+    font-size: 20px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+    letter-spacing: -0.2px;
+    height: 48px;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2; /* Change this number to the desired number of lines */
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Card Footer: 저자명, 작성일, 화살표 이미지 */
+  #research-container-mo .card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  #research-container-mo .card-footer .authors,
+  #research-container-mo .card-footer .date {
+    color: #fff;
+    font-family: Pretendard;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 140%; /* approx 19.6px */
+    letter-spacing: -0.14px;
+  }
+  #research-container-mo .card-footer .arrow img {
+    width: 38px;
+    height: 38px;
+  }
+</style>
+
+<!-- Container for the 4 new cards (2 per row) -->
+<div id="research-container-mo"></div>
+
+<script>
+  async function fetchFacultyAndGalleryData() {
+    console.log("Fetching faculty data and gallery from /faculty-data ...");
+    try {
+      const response = await fetch("https://saihst.imweb.me/research-data");
+      const textData = await response.text();
+
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(textData, "text/html");
+
+      // Extract and parse faculty data
+      const researchData = [];
+      const tableWidget = doc.getElementById("w2025020307b9e42beffc5");
+      if (tableWidget) {
+        const rows = tableWidget.querySelectorAll("table tbody tr");
+        if (rows.length > 2) {
+          const headers = Array.from(rows[0].querySelectorAll("td")).map(
+            (cell) => cell.innerText.trim()
+          );
+          for (let i = 2; i < rows.length; i++) {
+            const cells = rows[i].querySelectorAll("td");
+            const rowData = {};
+            headers.forEach((header, index) => {
+              let cellText = cells[index] ? cells[index].innerText.trim() : "";
+
+              rowData[header] = cellText;
+            });
+            researchData.push(rowData);
+          }
+        }
+      }
+
+      // Extract and parse gallery data
+      const galleryData = [];
+      const galleryWidget = doc.getElementById("w20250204c018be0f1bcab");
+      if (galleryWidget) {
+        galleryWidget
+          .querySelectorAll("div._item.item_gallary")
+          .forEach((card) => {
+            const name = card.querySelector("p.title")?.innerText.trim() || "";
+            const galleryImageUrl =
+              card.querySelector("div.img_wrap")?.getAttribute("data-src") ||
+              "";
+            if (name && galleryImageUrl)
+              galleryData.push({ name, galleryImageUrl });
+          });
+      }
+
+      return { researchData, galleryData };
+    } catch (error) {
+      console.error("Error fetching faculty and gallery data:", error);
+      return { researchData: [], galleryData: [] };
+    }
+  }
+
+  function updateFacultyWithGallery(researchData, galleryData) {
+    researchData.forEach((faculty) => {
+      const match = galleryData.find((item) => item.name === faculty["논문명"]);
+      if (match) {
+        faculty["galleryImageUrl"] = match.galleryImageUrl;
+      }
+    });
+    return researchData;
+  }
+
+  async function initialize() {
+    const { researchData, galleryData } = await fetchFacultyAndGalleryData();
+    const allData = updateFacultyWithGallery(researchData, galleryData);
+    // Extract only the first 4 items
+    const items = allData.reverse().slice(0, 4);
+    const container = document.getElementById("research-container-mo");
+    container.innerHTML = "";
+
+    items.forEach((item) => {
+      // Assuming CSV columns: "저널" (논문지), "논문명", "저자", "작성일", "논문링크", etc.
+      const journal = item["저널"] || "";
+      const paperTitle = item["논문명"] || "";
+      const authors = item["저자"] || "";
+      const date = item["작성일"] || "";
+
+      // Create the card element
+      const card = document.createElement("a");
+      card.href = item["논문링크"] || "#";
+      card.target = "_blank";
+      card.className = "research-card";
+
+      // Build the card's inner HTML
+      card.innerHTML = `
+        <div class="card-header">
+          <div class="journal">${journal}</div>
+          <div class="paper-title">${paperTitle}</div>
+        </div>
+        <div class="card-footer">
+          <div class="authors">${authors}</div>
+          <div class="date">${date}</div>
+          <div class="arrow">
+            <img src="https://cdn.imweb.me/upload/S20250106ea2dc3b34d664/22ac43511eeda.png" alt="arrow">
+          </div>
+        </div>
+      `;
+
+      container.appendChild(card);
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", initialize);
+</script>

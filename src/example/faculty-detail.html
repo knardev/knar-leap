@@ -1,0 +1,631 @@
+<style>
+  /* Grid Layout */
+  .detail-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 20px;
+    width: 100%;
+  }
+
+  /* Left Side: Image and SNS Links */
+  .detail-image-container {
+    grid-column: span 5;
+  }
+
+  .detail-image {
+    position: relative;
+    width: 440px;
+    height: 588px;
+    max-width: 440px;
+    max-height: 588px;
+    background-size: cover;
+    background-position: center;
+  }
+
+  .detail-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0);
+    transition: background 0.3s ease;
+  }
+
+  .detail-research-topic {
+    position: absolute;
+    left: 16px;
+    bottom: 20px;
+    color: #fff;
+    font-family: Pretendard;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 140%;
+    letter-spacing: -0.5px;
+  }
+
+  .sns-links {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .sns-link {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    text-decoration: none;
+  }
+
+  .sns-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .sns-text {
+    color: #555;
+    font-family: Pretendard;
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 170%;
+    letter-spacing: -0.5px;
+  }
+
+  .right-side {
+    grid-column: span 7;
+  }
+
+  /* Right Side: Info Box */
+  .info-box {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+
+  .professor-name {
+    color: #1a1a1a;
+    font-family: Pretendard;
+    font-size: 42px;
+    font-weight: 700;
+    line-height: 120%;
+    letter-spacing: -0.5px;
+  }
+
+  .additional-info {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-bottom: 84px;
+  }
+
+  .info-item {
+    display: flex;
+    gap: 20px;
+  }
+
+  .info-label {
+    width: 80px;
+    color: #555;
+    font-family: Pretendard;
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 150%;
+    letter-spacing: -0.5px;
+  }
+
+  .info-value {
+    color: #888;
+    font-family: Pretendard;
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 150%;
+    letter-spacing: -0.5px;
+  }
+
+  .scholar-box {
+    padding: 30px;
+    padding-bottom: 40px;
+    border-top: 2px solid var(--primary, #00296d);
+    margin-bottom: 20px;
+  }
+  .scholar-box-title {
+    color: #00296d;
+    font-family: Pretendard;
+    font-size: 20px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 120%; /* 24px */
+    letter-spacing: -0.5px;
+    margin-bottom: 20px;
+  }
+  .scholar-box-items {
+    display: flex;
+    gap: 28px;
+    flex-direction: column;
+    padding-left: 10px;
+  }
+  .scholar-box-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .scholar-box-item .title {
+    color: #555;
+    font-family: Pretendard;
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 140%; /* 25.2px */
+    letter-spacing: -0.5px;
+  }
+
+  .timeline-item {
+    margin-bottom: 10px;
+    display: flex;
+    gap: 16px;
+  }
+
+  .timeline-date {
+    color: rgba(85, 85, 85, 1);
+    font-family: Pretendard;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 170%;
+    letter-spacing: -0.5px;
+    flex-shrink: 0;
+    width: 120px;
+  }
+
+  .timeline-description {
+    color: #555;
+    font-family: Pretendard;
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 170%;
+    letter-spacing: -0.5px;
+    word-break: keep-all;
+  }
+
+  .research-lab {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .lab-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .lab-name {
+    color: #222;
+    font-family: Pretendard;
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 170%;
+    letter-spacing: -0.5px;
+  }
+
+  .lab-link {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+  }
+
+  .link-icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .lab-description {
+    color: #555;
+    font-family: Pretendard;
+    font-size: 16.5px;
+    font-weight: 500;
+    line-height: 170%;
+    letter-spacing: -0.5px;
+  }
+
+  .publications-list {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+
+  .publication-item {
+    color: #555;
+    font-family: Pretendard;
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 170%; /* 30.6px */
+    letter-spacing: -0.5px;
+    word-break: keep-all;
+  }
+
+  /* Mobile styles */
+  @media (max-width: 768px) {
+    .detail-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .detail-image-container {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .detail-image {
+      width: 340px;
+      height: 454px;
+      max-width: 440px;
+    }
+
+    .sns-links {
+      width: 100%;
+      margin-top: 10px;
+      gap: 5px;
+    }
+
+    .right-side {
+      padding: 10px;
+    }
+
+    .info-box {
+      gap: 30px;
+      padding-left: 0;
+      padding-right: 0;
+    }
+
+    .professor-name {
+      font-size: 32px;
+      line-height: 140%;
+    }
+
+    .additional-info {
+      gap: 16px;
+    }
+
+    .info-label {
+      width: 80px;
+      font-size: 16px;
+      line-height: 140%;
+    }
+
+    .info-value {
+      font-size: 16px;
+      line-height: 140%;
+      word-break: keep-all;
+      width: 196px;
+    }
+
+    .scholar-box {
+      padding: 20px;
+      padding-left: 0;
+      padding-right: 0;
+    }
+
+    .scholar-box-title {
+      font-size: 18px;
+      margin-bottom: 16px;
+    }
+
+    .scholar-box-items {
+      gap: 20px;
+    }
+
+    .timeline-item {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .timeline-date {
+      width: auto;
+      font-size: 16px;
+      line-height: 140%;
+    }
+
+    .timeline-description {
+      font-size: 16px;
+      line-height: 140%;
+    }
+
+    .lab-name {
+      font-size: 16px;
+    }
+
+    .lab-description {
+      font-size: 15px;
+    }
+
+    .publications-list {
+      gap: 20px;
+    }
+
+    .publication-item {
+      font-size: 16px;
+      line-height: 140%;
+    }
+  }
+</style>
+
+<div id="faculty-detail-container"></div>
+
+<script>
+  /**
+   * Fetch both faculty table data and gallery data from /faculty-data.
+   */
+  async function fetchFacultyAndGalleryData() {
+    try {
+      const response = await fetch("https://saihst.imweb.me/faculty-data");
+      const textData = await response.text();
+
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(textData, "text/html");
+
+      // --- Extract Faculty Table Data ---
+      let facultyData = [];
+      const tableWidget = doc.getElementById("w20250204fccbec98b926f");
+      if (tableWidget) {
+        const rows = tableWidget.querySelectorAll("table tbody tr");
+        if (rows.length > 1) {
+          const headers = Array.from(rows[0].querySelectorAll("td")).map(
+            (cell) => cell.innerText.trim()
+          );
+          for (let i = 1; i < rows.length; i++) {
+            const cells = rows[i].querySelectorAll("td");
+            let rowObj = {};
+            headers.forEach((header, index) => {
+              if (
+                [
+                  "연구분야",
+                  "연구주제",
+                  "학력",
+                  "경력",
+                  "대표논문",
+                  "연구실 소개",
+                ].includes(header)
+              ) {
+                // Use innerHTML and split by <br> to get the first part
+                rowObj[header] = cells[index].innerHTML.trim();
+                return;
+              }
+              rowObj[header] = cells[index]
+                ? cells[index].innerText.trim()
+                : "";
+            });
+            facultyData.push(rowObj);
+          }
+        }
+      }
+      console.log(facultyData[4]);
+
+      // --- Extract Gallery Data ---
+      let galleryData = [];
+      const galleryWidget = doc.getElementById("w20250204a1734d8a6e9d3");
+      if (galleryWidget) {
+        const galleryItems = galleryWidget.querySelectorAll(
+          "div._item.item_gallary"
+        );
+        galleryItems.forEach((card) => {
+          const name = card.querySelector("p.title")?.innerText.trim() || "";
+          const galleryImageUrl =
+            card.querySelector("div.img_wrap")?.getAttribute("data-src") || "";
+          if (name && galleryImageUrl) {
+            galleryData.push({ name, galleryImageUrl });
+          }
+        });
+      }
+
+      return { facultyData, galleryData };
+    } catch (error) {
+      console.error("Error fetching faculty and gallery data:", error);
+      return { facultyData: [], galleryData: [] };
+    }
+  }
+
+  /**
+   * Render the faculty detail page.
+   */
+  function renderFacultyDetail(faculty) {
+    const container = document.getElementById("faculty-detail-container");
+    container.innerHTML = `
+      <div class="detail-grid">
+        <!-- Left Side -->
+        <div class="detail-image-container">
+          <div class="detail-image" style="background-image: url('${
+            faculty["galleryImageUrl"] || ""
+          }');">
+          </div>
+          <div class="sns-links">
+            ${
+              faculty["구글 스콜러 링크"]
+                ? `<a href="${faculty["구글 스콜러 링크"]}" target="_blank" class="sns-link">
+                  <p><img src="https://cdn.imweb.me/upload/S20250106ea2dc3b34d664/d3f3506d377ec.png" class="fr-fin fr-dib" style="width: 28px; height: 28px;"></p>
+                  <div class="sns-text">Google Scholar</div>
+                </a>`
+                : ""
+            }
+            
+            ${
+              faculty["링크드인 링크"]
+                ? `<a href="${faculty["링크드인 링크"]}" target="_blank" class="sns-link">
+                  <p><img src="https://cdn.imweb.me/upload/S20250106ea2dc3b34d664/d3f3506d377ec.png" class="fr-fin fr-dib" style="width: 28px; height: 28px;"></p>
+                  <div class="sns-text">LinkedIn</div>
+                </a>`
+                : ""
+            }
+
+            ${
+              faculty["기타 링크"]
+                ? `<a href="${faculty["기타 링크"]}" target="_blank" class="sns-link">
+                  <p><img src="https://cdn.imweb.me/upload/S20250106ea2dc3b34d664/d3f3506d377ec.png" class="fr-fin fr-dib" style="width: 28px; height: 28px;"></p>
+                  <div class="sns-text">Other</div>
+                </a>`
+                : ""
+            }
+          </div>
+        </div>
+        <!-- Right Side -->
+        <div class="right-side">
+          <div class="info-box">
+            <div class="professor-name">
+              ${faculty["한글 이름"] || ""}<br>${faculty["영문 이름"] || ""}
+            </div>
+            <div class="additional-info">
+              ${generateInfoItem("직위", "직위", faculty)}
+              ${generateInfoItem("소속학과", "소속학과", faculty)}
+              ${generateInfoItem("이메일", "이메일", faculty)}
+              ${generateInfoItem("연구분야", "연구분야", faculty, true)}
+              ${generateInfoItem("연구주제", "연구주제", faculty, true)}
+            </div>
+          </div>
+          <div class="scholar-box">
+            <div class="scholar-box-title">학력 및 경력</div>
+            <div class="scholar-box-items">
+              <div class="scholar-box-item">
+                <div class="title">학력</div>
+                <div>${renderTimeline(faculty["학력"] || "")}</div>
+              </div>
+              <div class="scholar-box-item">
+                <div class="title">경력</div>
+                <div>${renderTimeline(faculty["경력"] || "")}</div>
+              </div>
+            </div>
+          </div>
+          <div class="scholar-box">
+            <div class="scholar-box-title">연구실 소개</div>
+            ${renderResearchLabSection(faculty)}
+          </div>
+          <div class="scholar-box">
+            <div class="scholar-box-title">대표 논문</div>
+            ${renderPublicationsSection(faculty)}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function generateInfoItem(
+    labelText,
+    fieldKey,
+    faculty,
+    useInnerHTML = false
+  ) {
+    const value = faculty[fieldKey] || "";
+    return `
+      <div class="info-item">
+        <div class="info-label">${labelText}</div>
+        <div class="info-value">${
+          useInnerHTML ? value : value.replace(/\n/g, " ")
+        }</div>
+      </div>
+    `;
+  }
+
+  /**
+   * Render the "학력" and "경력" sections with styled spans for dates and descriptions.
+   */
+  function renderTimeline(timelineData) {
+    // Split the timeline data by <br> to handle multiple entries
+    const entries = timelineData.split("<br>").filter((item) => item.trim());
+
+    // Map each entry to a styled HTML string
+    return entries
+      .map((entry) => {
+        const match = entry.match(/(\[.*?\])(.+)/); // Match date and description parts
+        if (match) {
+          // Remove square brackets and trim the description part
+          const datePart = match[1].trim().replace(/\[|\]/g, ""); // The part inside the square brackets
+
+          const descriptionPart = match[2].trim(); // The part after the square brackets
+
+          // Return the styled entry with separate spans for date and description
+          return `
+          <div class="timeline-item">
+            <span class="timeline-date">${datePart}</span>
+            <span class="timeline-description">${descriptionPart}</span>
+          </div>
+        `;
+        }
+        return ""; // If format doesn't match, return empty string
+      })
+      .join("");
+  }
+
+  /**
+   * Render the "연구실 소개" section.
+   */
+  function renderResearchLabSection(faculty) {
+    const labName = faculty["연구실명"] || "연구실명 미정";
+    const labLink = faculty["연구실 홈페이지 링크"] || "";
+    const labDescription = faculty["연구실 소개"] || "연구실 소개가 없습니다.";
+
+    return `
+    <div class="research-lab">
+      <div class="lab-info">
+        <div class="lab-name">${labName}</div>
+        ${
+          labLink
+            ? `<a href="${labLink}" target="_blank" class="lab-link">
+                <img src="https://cdn.imweb.me/upload/S20250106ea2dc3b34d664/20cd826ae569b.png" class="link-icon" alt="link-icon">
+              </a>`
+            : ""
+        }
+      </div>
+      <div class="lab-description">${labDescription}</div>
+    </div>
+  `;
+  }
+
+  /**
+   * Render the "대표논문" section.
+   */
+  function renderPublicationsSection(faculty) {
+    const publications = faculty["대표논문"] || "";
+    const papers = publications
+      .split("<br>")
+      .filter((paper) => paper.trim() !== "");
+
+    return `
+      <div class="publications-list">
+        ${papers
+          .map(
+            (paper) => `
+          <div class="publication-item">
+            ${paper}
+          </div>
+        `
+          )
+          .join("")}
+      </div>
+    `;
+  }
+
+  async function initializeFacultyDetail() {
+    const { facultyData: rawFacultyData, galleryData } =
+      await fetchFacultyAndGalleryData();
+    rawFacultyData.forEach((faculty) => {
+      const name = faculty["한글 이름"] ? faculty["한글 이름"].trim() : "";
+      const match = galleryData.find((item) => item.name === name);
+      if (match) faculty["galleryImageUrl"] = match.galleryImageUrl;
+    });
+
+    const professorParam = new URLSearchParams(window.location.search).get("n");
+    const detailFaculty = rawFacultyData.find(
+      (faculty) =>
+        (faculty["한글 이름"] + " 교수" || "").trim() === professorParam
+    );
+    if (detailFaculty) renderFacultyDetail(detailFaculty);
+    else console.error("No matching faculty data found for:", professorParam);
+  }
+
+  document.addEventListener("DOMContentLoaded", initializeFacultyDetail);
+</script>

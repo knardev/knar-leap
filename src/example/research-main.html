@@ -1,0 +1,292 @@
+<style>
+  /* Table styles */
+  #s20250101c59456100125a #download-container table {
+    border-top: 1px solid #000;
+    border-bottom: 1px solid #000;
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+
+  #s20250101c59456100125a #download-container thead th {
+    color: #b1b1b1;
+    text-align: center;
+    font-family: Pretendard;
+    font-size: 20px;
+    font-weight: 700;
+    padding: 24px 0;
+    border-bottom: 1px solid #00000020;
+  }
+
+  #s20250101c59456100125a #download-container tbody td {
+    text-align: center;
+    font-family: Pretendard;
+    font-size: 19px;
+    line-height: 100%;
+    padding: 24px 0;
+    border-bottom: 1px solid #00000020;
+  }
+
+  #s20250101c59456100125a #download-container tbody td:first-child {
+    color: #333;
+    font-weight: 700;
+  }
+
+  #s20250101c59456100125a #download-container tbody td:not(:first-child) {
+    color: #555;
+    font-weight: 400;
+  }
+
+  /* No result message */
+  #s20250101c59456100125a #download-container .no-result {
+    text-align: center;
+    padding: 24px 0;
+  }
+
+  /* Pagination styles */
+  #s20250101c59456100125a #download-container .pagination {
+    margin-top: 20px;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  #s20250101c59456100125a #download-container .pagination button {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-family: Pretendard;
+    font-size: 15px;
+    font-weight: 500;
+    margin: 0 15px;
+  }
+
+  #s20250101c59456100125a #download-container .pagination button.active {
+    color: #12298c;
+    text-decoration: underline;
+  }
+
+  #s20250101c59456100125a #download-container .pagination button.inactive {
+    color: #777;
+  }
+
+  #s20250101c59456100125a #download-container .pagination button.arrow {
+    color: #d8d8da;
+  }
+
+  #s20250101c59456100125a #download-container .download-icon {
+    height: 23px;
+    width: 23px;
+    cursor: pointer;
+  }
+
+  #s20250101c59456100125a #download-container .download-link {
+    text-decoration: none;
+  }
+  @media (max-width: 768px) {
+    #s20250101c59456100125a #download-container tbody td {
+      word-break: break-all;
+    }
+  }
+</style>
+
+<div id="download-container"></div>
+
+<script>
+  const downloadContainer = document.getElementById("download-container");
+  const itemsPerPage = 10;
+  let currentPage = 1;
+  let totalPages = 1;
+  let allData = [];
+
+  const searchParams = new URLSearchParams(window.location.search);
+  const categoryFilter = searchParams.get("category") || "";
+  const subCategoryFilter = searchParams.get("subcategory") || "";
+  const fileTypeFilter = searchParams.get("filetype") || "";
+  const keywordFilter = searchParams.get("query") || "";
+
+  function convertGoogleDriveLinkToDownload(driveLink) {
+    const fileIdMatch = driveLink.match(/\/file\/d\/([^\/]+)\//);
+    if (fileIdMatch && fileIdMatch[1]) {
+      const fileId = fileIdMatch[1];
+      return `https://docs.google.com/uc?export=download&id=${fileId}`;
+    } else {
+      console.warn("유효하지 않은 Google Drive 링크입니다:", driveLink);
+      return null;
+    }
+  }
+
+  async function fetchAndExtractCsvData(tableSelector = ".text-table") {
+    try {
+      const response = await fetch("https://inctech.imweb.me/download-data");
+      const htmlText = await response.text();
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(htmlText, "text/html");
+
+      const container = doc.querySelector(tableSelector);
+      if (!container) return [];
+
+      const csvText = Array.from(container.querySelectorAll("p"))
+        .map((p) => p.innerText.trim())
+        .join("\n");
+
+      if (!csvText) return [];
+
+      const lines = csvText.split("\n").map((line) => line.trim());
+      if (lines.length < 2) return [];
+
+      const headers = lines[0].split(",").map((header) => header.trim());
+      const data = lines.slice(1).map((line) => {
+        const values = line.split(",").map((value) => value.trim());
+        return Object.fromEntries(
+          headers.map((header, i) => [header, values[i] || ""])
+        );
+      });
+
+      return data.filter((row) => Object.values(row).some((value) => value));
+    } catch (error) {
+      console.error("데이터 요청 중 오류 발생:", error);
+      return [];
+    }
+  }
+
+  function filterData(data) {
+    return data.filter((item) => {
+      const isAllCategory = categoryFilter === "전체" || !categoryFilter;
+      const categoryMatch = isAllCategory
+        ? true
+        : (item["제품군"] || "").includes(categoryFilter);
+      const isAllSubCategory =
+        subCategoryFilter === "전체" || !subCategoryFilter;
+      const subCategoryMatch = isAllSubCategory
+        ? true
+        : (item["상세분류"] || "").includes(subCategoryFilter);
+      const isAllFileType = fileTypeFilter === "전체" || !fileTypeFilter;
+      const fileTypeMatch = isAllFileType
+        ? true
+        : (item["구분"] || "").includes(fileTypeFilter);
+
+      const keywordMatch = keywordFilter
+        ? Object.values(item).some((value) =>
+            (value || "").includes(keywordFilter)
+          )
+        : true;
+      return categoryMatch && keywordMatch && subCategoryMatch && fileTypeMatch;
+    });
+  }
+
+  function renderTable() {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedData = allData.slice(startIndex, endIndex);
+
+    let tableHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>구분</th>
+            <th>제품명</th>
+            <th>제품군</th>
+            <th>상세분류</th>
+            <th>다운로드</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    if (paginatedData.length === 0) {
+      tableHTML += `
+        <tr>
+          <td colspan="5" class="no-result">검색 결과가 없습니다.</td>
+        </tr>
+      `;
+    } else {
+      paginatedData.forEach((item) => {
+        const downloadLink = convertGoogleDriveLinkToDownload(
+          item["다운로드 링크"]
+        );
+        tableHTML += `
+          <tr>
+            <td>${item["구분"] || ""}</td>
+            <td>${item["제품명"] || ""}</td>
+            <td>${item["제품군"] || ""}</td>
+            <td>${item["상세분류"] || ""}</td>
+            <td>
+              <a href="?modal_menu=m202501107bfca2f26f195&download_link=${encodeURIComponent(
+                downloadLink
+              )}" target="_self" class="download-link">
+                <img
+                  src="https://cdn.imweb.me/upload/S20241220c9927bad89189/a3f692b8385fc.png"
+                  alt="다운로드"
+                  class="download-icon"
+                />
+              </a>
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    tableHTML += `
+        </tbody>
+      </table>
+    `;
+
+    downloadContainer.innerHTML = tableHTML;
+  }
+
+  function renderPagination() {
+    let paginationHTML = `<div class="pagination">`;
+
+    paginationHTML += `
+      <button 
+        onclick="changePage(${currentPage > 1 ? currentPage - 1 : 1})" 
+        class="arrow"
+      >&lt;</button>
+    `;
+
+    const startPage = Math.max(1, currentPage - 2);
+    const endPage = Math.min(totalPages, currentPage + 2);
+
+    for (let i = startPage; i <= endPage; i++) {
+      const isActive = i === currentPage;
+      paginationHTML += `
+        <button 
+          onclick="changePage(${i})" 
+          class="${isActive ? "active" : "inactive"}"
+        >${i}</button>
+      `;
+    }
+
+    paginationHTML += `
+      <button 
+        onclick="changePage(${
+          currentPage < totalPages ? currentPage + 1 : totalPages
+        })" 
+        class="arrow"
+      >&gt;</button>
+    </div>`;
+
+    downloadContainer.insertAdjacentHTML("beforeend", paginationHTML);
+  }
+
+  function changePage(page) {
+    currentPage = page;
+    renderTable();
+    renderPagination();
+  }
+
+  async function initialize() {
+    const rawData = await fetchAndExtractCsvData(
+      "#w20250114daa4196882ddf .text-table"
+    );
+    allData = filterData(rawData);
+    totalPages = Math.ceil(allData.length / itemsPerPage);
+    totalPages = totalPages < 1 ? 1 : totalPages;
+    renderTable();
+    renderPagination();
+  }
+
+  document.addEventListener("DOMContentLoaded", initialize);
+</script>

@@ -1,0 +1,214 @@
+<style>
+  /* Table styles */
+  #dart-container table {
+    border-top: 1px solid #000;
+    border-bottom: 1px solid #000;
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+  #dart-container thead th {
+    color: #b1b1b1;
+    text-align: center;
+    font-family: Pretendard;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 100%;
+    letter-spacing: -0.6px;
+    padding: 24px 0;
+    border-bottom: 1px solid #00000020;
+  }
+  #dart-container tbody td {
+    text-align: center;
+    font-family: Pretendard;
+    font-size: 19px;
+    line-height: 100%;
+    padding: 24px 0;
+    border-bottom: 1px solid #00000020;
+  }
+  #dart-container tbody td:first-child {
+    color: #333;
+    font-weight: 700;
+  }
+  #dart-container tbody td:not(:first-child) {
+    color: #555;
+    font-weight: 400;
+  }
+  /* No result message */
+  #dart-container .no-result {
+    text-align: center;
+    padding: 24px 0;
+  }
+  /* Pagination styles */
+  #dart-container .pagination {
+    margin-top: 20px;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  #dart-container .pagination button {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-family: Pretendard;
+    font-size: 15px;
+    font-weight: 500;
+    margin: 0 15px;
+  }
+  #dart-container .pagination button.active {
+    color: #12298c;
+    text-decoration: underline;
+  }
+  #dart-container .pagination button.inactive {
+    color: #777;
+  }
+  #dart-container .pagination button.arrow {
+    color: #d8d8da;
+  }
+</style>
+
+<div id="dart-container"></div>
+
+<script>
+  const dartContainer = document.getElementById("dart-container");
+  const itemsPerPage = 10;
+  let currentPage = 1;
+  let totalPages = 1;
+  let allData = [];
+
+  /**
+   * DART 공시 데이터를 모두 가져오는 함수
+   * Next.js proxy 엔드포인트를 활용하여 CORS 문제를 우회하고,
+   * total_page 값에 따라 while문으로 모든 페이지의 데이터를 가져옵니다.
+   */
+  async function fetchDartData() {
+    const proxyUrl = "https://knar-leap.vercel.app/api/v2/proxy";
+    const crtfc_key = "8df6b066b9671d67fd5ee4c9c26522777d07e9ca";
+    const corp_code = "00365758";
+    const bgn_de = "20200117";
+    const end_de = "20250117";
+    const page_count = 100; // 한 페이지당 최대 건수
+    let pageNo = 1;
+    let totalPage = 1;
+    let records = [];
+
+    do {
+      const dartUrl = `https://opendart.fss.or.kr/api/list.json?crtfc_key=${crtfc_key}&corp_code=${corp_code}&bgn_de=${bgn_de}&end_de=${end_de}&page_no=${pageNo}&page_count=${page_count}`;
+      // 프록시 서버로 전달할 요청 본문 구성 (GET 방식으로 요청)
+      const requestPayload = {
+        url: dartUrl,
+        method: "GET",
+        contentType: "application/json",
+      };
+
+      try {
+        const response = await fetch(proxyUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestPayload),
+        });
+        const data = await response.json();
+        if (data.status !== "000") {
+          console.error("API Error:", data.message);
+          break;
+        }
+        records = records.concat(data.list);
+        totalPage = parseInt(data.total_page, 10);
+        pageNo++;
+      } catch (error) {
+        console.error("Error fetching Dart data:", error);
+        break;
+      }
+    } while (pageNo <= totalPage);
+
+    return records;
+  }
+
+  // 테이블 렌더링 함수 (연번, 리포트이름, 제출일)
+  function renderTable() {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedData = allData.slice(startIndex, endIndex);
+
+    let tableHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>연번</th>
+            <th>리포트이름</th>
+            <th>제출일</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    if (paginatedData.length === 0) {
+      tableHTML += `
+        <tr>
+          <td colspan="3" class="no-result">검색 결과가 없습니다.</td>
+        </tr>
+      `;
+    } else {
+      paginatedData.forEach((item, index) => {
+        const serialNumber = startIndex + index + 1;
+        tableHTML += `
+          <tr onclick="window.open('https://dart.fss.or.kr/dsaf001/main.do?rcpNo=${
+            item.rcept_no
+          }', '_blank')">
+            <td>${serialNumber}</td>
+            <td>${item.report_nm || ""}</td>
+            <td>${item.rcept_dt || ""}</td>
+          </tr>
+        `;
+      });
+    }
+
+    tableHTML += `</tbody></table>`;
+    dartContainer.innerHTML = tableHTML;
+  }
+
+  // 페이지네이션 렌더링 함수 (이전/다음 및 페이지 번호)
+  function renderPagination() {
+    let paginationHTML = `<div class="pagination">`;
+    paginationHTML += `
+      <button onclick="changePage(${
+        currentPage > 1 ? currentPage - 1 : 1
+      })" class="arrow">&lt;</button>
+    `;
+    const startPage = Math.max(1, currentPage - 2);
+    const endPage = Math.min(totalPages, currentPage + 2);
+    for (let i = startPage; i <= endPage; i++) {
+      const isActive = i === currentPage;
+      paginationHTML += `<button onclick="changePage(${i})" class="${
+        isActive ? "active" : "inactive"
+      }">${i}</button>`;
+    }
+    paginationHTML += `
+      <button onclick="changePage(${
+        currentPage < totalPages ? currentPage + 1 : totalPages
+      })" class="arrow">&gt;</button>
+    </div>`;
+    dartContainer.insertAdjacentHTML("beforeend", paginationHTML);
+  }
+
+  // 페이지 변경 함수
+  function changePage(page) {
+    currentPage = page;
+    renderTable();
+    renderPagination();
+  }
+
+  // 초기화 함수: 데이터를 모두 가져와서 테이블 및 페이지네이션 렌더링
+  async function initialize() {
+    allData = await fetchDartData();
+    totalPages = Math.ceil(allData.length / itemsPerPage);
+    if (totalPages < 1) totalPages = 1;
+    renderTable();
+    renderPagination();
+  }
+
+  document.addEventListener("DOMContentLoaded", initialize);
+</script>
