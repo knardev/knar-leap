@@ -129,12 +129,19 @@ export async function POST(req: NextRequest) {
     const todayItem = sortedItems.find((item) => item.basDt === basDt);
     const latestItem = todayItem || sortedItems[0];
 
-    // 주가(clpr)만 반환
+    // 주가 및 등락 정보 반환
+    const vs = latestItem.vs || "0"; // 대비 (전일 대비)
+    const fltRt = latestItem.fltRt || "0.00"; // 등락률
+    const flucTpCd = parseFloat(vs) > 0 ? "1" : parseFloat(vs) < 0 ? "2" : "3"; // 1: 상승, 2: 하락, 3: 보합
+
     return setCorsHeaders(
       NextResponse.json({
         clpr: latestItem.clpr,
         basDt: latestItem.basDt,
         itmsNm: latestItem.itmsNm,
+        vs: vs, // 대비
+        fltRt: fltRt, // 등락률
+        flucTpCd: flucTpCd, // 등락 구분 코드
       })
     );
   } catch (error) {
