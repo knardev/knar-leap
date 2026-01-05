@@ -19,44 +19,135 @@ export function OPTIONS() {
 
 // POST 요청 처리
 export async function POST(req: NextRequest) {
-  const url = "http://data.krx.co.kr/comm/bldAttendant/getJsonData.cmd";
-  const headers = {
-    Referer:
-      "http://data.krx.co.kr/contents/MDC/MDI/mdiLoader/index.cmd?menuId=MDC0201020203",
-    Origin: "http://data.krx.co.kr",
-    "Content-Type": "application/x-www-form-urlencoded",
-  };
+  const baseUrl =
+    "https://apis.data.go.kr/1160100/service/GetStockSecuritiesInfoService/getStockPriceInfo";
+  const serviceKey =
+    "2590793aa81a12cb3d2e660ad6e105a519dc7c7a9d6c0f2dc3b41fb7c49f3e6e";
 
   try {
-    // 요청 본문 가져오기
-    const body = await req.text(); // URLSearchParams 형식 데이터로 변환된 문자열
+    // 요청 본문에서 종목명 추출
+    const bodyText = await req.text();
+    let params: URLSearchParams = new URLSearchParams();
 
-    // KRX API로 요청 전송
-    const response = await fetch(url, {
-      method: "POST",
-      headers: headers,
-      body: body,
-    });
+    if (bodyText) {
+      try {
+        const decodedBody = decodeURIComponent(bodyText);
+        params = new URLSearchParams(decodedBody);
+      } catch {
+        params = new URLSearchParams(bodyText);
+      }
+    }
 
-    if (!response.ok) {
-      return NextResponse.json(
-        { error: "Failed to fetch data from KRX API" },
-        { status: response.status }
+    // 종목명 추출 (itmsNm 또는 기존 파라미터에서 추출)
+    const itmsNm =
+      params.get("itmsNm") || params.get("codeNmisuCd_finder_stkisu0_0");
+
+    if (!itmsNm) {
+      return setCorsHeaders(
+        NextResponse.json(
+          { error: "종목명(itmsNm)이 필요합니다." },
+          { status: 400 }
+        )
       );
     }
 
-    const data = await response.json();
+    // 오늘 날짜를 YYYYMMDD 형식으로 생성
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+    const basDt = `${year}${month}${day}`;
 
-    // 응답에 CORS 헤더 추가
-    const nextResponse = NextResponse.json(data);
-    return setCorsHeaders(nextResponse);
-  } catch (error) {
-    console.error("Proxy error:", error);
-    const nextResponse = NextResponse.json(
-      { error: "An error occurred while processing the request." },
-      { status: 500 }
+    // 공공데이터포털 API 파라미터 구성 (오늘 날짜로 먼저 시도)
+    const apiParams = new URLSearchParams({
+      serviceKey: serviceKey,
+      resultType: "json",
+      itmsNm: itmsNm,
+      basDt: basDt, // 오늘 날짜 지정
+    });
+
+    let url = `${baseUrl}?${apiParams.toString()}`;
+    let response = await fetch(url, { method: "GET" });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      return setCorsHeaders(
+        NextResponse.json(
+          { error: "Failed to fetch data", details: errorText },
+          { status: response.status }
+        )
+      );
+    }
+
+    let data = await response.json();
+    let items = data?.response?.body?.items?.item;
+
+    // 오늘 날짜 데이터가 없으면 basDt 없이 다시 요청
+    if (!items || (Array.isArray(items) && items.length === 0)) {
+      const apiParamsWithoutDate = new URLSearchParams({
+        serviceKey: serviceKey,
+        resultType: "json",
+        itmsNm: itmsNm,
+      });
+      url = `${baseUrl}?${apiParamsWithoutDate.toString()}`;
+      response = await fetch(url, { method: "GET" });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        return setCorsHeaders(
+          NextResponse.json(
+            { error: "Failed to fetch data", details: errorText },
+            { status: response.status }
+          )
+        );
+      }
+
+      data = await response.json();
+      items = data?.response?.body?.items?.item;
+
+      if (!items || (Array.isArray(items) && items.length === 0)) {
+        return setCorsHeaders(
+          NextResponse.json(
+            { error: "주가 데이터를 찾을 수 없습니다." },
+            { status: 404 }
+          )
+        );
+      }
+    }
+
+    // 배열이 아니면 단일 객체로 변환
+    const itemArray = Array.isArray(items) ? items : [items];
+
+    // basDt 기준으로 정렬하여 가장 최신 데이터 찾기
+    const sortedItems = itemArray.sort((a, b) => {
+      const dateA = parseInt(a.basDt || "0");
+      const dateB = parseInt(b.basDt || "0");
+      return dateB - dateA; // 내림차순 정렬
+    });
+
+    // 오늘 날짜 데이터가 있으면 사용, 없으면 가장 최신 데이터 사용
+    const todayItem = sortedItems.find((item) => item.basDt === basDt);
+    const latestItem = todayItem || sortedItems[0];
+
+    // 주가(clpr)만 반환
+    return setCorsHeaders(
+      NextResponse.json({
+        clpr: latestItem.clpr,
+        basDt: latestItem.basDt,
+        itmsNm: latestItem.itmsNm,
+      })
     );
-    return setCorsHeaders(nextResponse);
+  } catch (error) {
+    console.error("Error:", error);
+    return setCorsHeaders(
+      NextResponse.json(
+        {
+          error: "An error occurred",
+          details: error instanceof Error ? error.message : "Unknown error",
+        },
+        { status: 500 }
+      )
+    );
   }
 }
 
